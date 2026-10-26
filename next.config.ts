@@ -1,10 +1,9 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === "production";
-
+// For custom domains on GitHub Pages (e.g. timer.yourdomain.com), basePath is ""
 const nextConfig: NextConfig = {
   output: "export",
-  basePath: isProd ? "/study-tracker" : "",
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
   images: {
     unoptimized: true,
   },
