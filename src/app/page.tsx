@@ -34,7 +34,7 @@ export default function Home() {
   };
 
   return (
-    <div className="study-app-wrapper">
+    <main className="study-app-wrapper" id="main-content">
       {/* Sleek Minimal Top Navigation Bar */}
       <motion.header 
         className="sleek-top-navbar"
@@ -52,7 +52,7 @@ export default function Home() {
               <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
             </svg>
           </motion.div>
-          <span className="brand-title">Studies<span className="brand-accent">Timer</span></span>
+          <h1 className="brand-title">Studies<span className="brand-accent">Timer</span></h1>
           <span className="nav-chip">Aesthetic Focus</span>
         </div>
 
@@ -162,6 +162,24 @@ export default function Home() {
           <BackupPanel onBackupImported={triggerRefresh} />
         </motion.div>
       </div>
-    </div>
+
+      {/* Semantic SEO & Accessibility Footer */}
+      <footer className="study-app-footer">
+        <div className="footer-content">
+          <div className="footer-brand-info">
+            <span className="footer-brand-title">Studies<span className="brand-accent">Timer</span></span>
+            <p className="footer-description">
+              Free aesthetic online Pomodoro timer, study habit tracker, and annual contribution heatmap designed for deep focus.
+            </p>
+          </div>
+          <div className="footer-meta-info">
+            <span className="footer-pill">🔒 100% Free · Local-First IndexedDB Privacy</span>
+            <span className="footer-copyright">
+              © {new Date().getFullYear()} StudiesTimer · prompt-forge.in
+            </span>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
