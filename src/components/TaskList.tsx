@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   StudyTask, 
   getTasks, 
@@ -275,72 +276,84 @@ export default function TaskList() {
             )}
           </div>
         ) : (
-          filteredTasks.map(task => {
-            const isActive = activeTaskId === task.id;
-            return (
-              <div 
-                key={task.id} 
-                className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'is-active-task' : ''}`}
-              >
-                {/* Checkbox */}
-                <button 
-                  type="button"
-                  className={`task-checkbox ${task.completed ? 'checked' : ''}`}
-                  onClick={() => handleToggleComplete(task)}
-                  title={task.completed ? 'Mark incomplete' : 'Mark completed'}
+          <AnimatePresence mode="popLayout">
+            {filteredTasks.map(task => {
+              const isActive = activeTaskId === task.id;
+              return (
+                <motion.div 
+                  key={task.id} 
+                  layout
+                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.15 } }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                  className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'is-active-task' : ''}`}
                 >
-                  {task.completed && (
-                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  )}
-                </button>
-
-                {/* Content */}
-                <div className="task-content">
-                  <div className="task-title-row">
-                    <span className="task-title">{task.title}</span>
-                    <span className="task-subject-tag">{task.subject}</span>
-                  </div>
-
-                  <div className="task-footer-row">
-                    <span className="task-pom-count">
-                      <span className="pom-icon">🍅</span> {task.actPomodoros || 0} / {task.estPomodoros}
-                    </span>
-                    {task.completedAt && (
-                      <span className="task-completed-time">
-                        Done {new Date(task.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="task-actions">
-                  {!task.completed && (
-                    <button 
-                      type="button"
-                      className={`btn-focus-task ${isActive ? 'active' : ''}`}
-                      onClick={() => handleSelectActive(task)}
-                      title={isActive ? 'Deselect from focus timer' : 'Set as current timer task'}
-                    >
-                      {isActive ? '🎯 In Focus' : 'Focus'}
-                    </button>
-                  )}
-                  <button 
+                  {/* Checkbox with spring tap feedback */}
+                  <motion.button 
                     type="button"
-                    className="btn-delete-task"
-                    onClick={() => deleteTask(task.id)}
-                    title="Delete task"
+                    className={`task-checkbox ${task.completed ? 'checked' : ''}`}
+                    onClick={() => handleToggleComplete(task)}
+                    whileTap={{ scale: 0.8 }}
+                    whileHover={{ scale: 1.08 }}
+                    title={task.completed ? 'Mark incomplete' : 'Mark completed'}
                   >
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            );
-          })
+                    {task.completed && (
+                      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    )}
+                  </motion.button>
+
+                  {/* Content */}
+                  <div className="task-content">
+                    <div className="task-title-row">
+                      <span className="task-title">{task.title}</span>
+                      <span className="task-subject-tag">{task.subject}</span>
+                    </div>
+
+                    <div className="task-footer-row">
+                      <span className="task-pom-count">
+                        <span className="pom-icon">🍅</span> {task.actPomodoros || 0} / {task.estPomodoros}
+                      </span>
+                      {task.completedAt && (
+                        <span className="task-completed-time">
+                          Done {new Date(task.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="task-actions">
+                    {!task.completed && (
+                      <motion.button 
+                        type="button"
+                        className={`btn-focus-task ${isActive ? 'active' : ''}`}
+                        onClick={() => handleSelectActive(task)}
+                        whileTap={{ scale: 0.93 }}
+                        title={isActive ? 'Deselect from focus timer' : 'Set as current timer task'}
+                      >
+                        {isActive ? '🎯 In Focus' : 'Focus'}
+                      </motion.button>
+                    )}
+                    <motion.button 
+                      type="button"
+                      className="btn-delete-task"
+                      onClick={() => deleteTask(task.id)}
+                      whileTap={{ scale: 0.85 }}
+                      whileHover={{ scale: 1.1 }}
+                      title="Delete task"
+                    >
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         )}
       </div>
     </div>

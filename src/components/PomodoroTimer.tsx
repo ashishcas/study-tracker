@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   saveSession, 
   getSubjects, 
@@ -692,20 +693,25 @@ export default function PomodoroTimer({ onSessionLogged, onScrollToDetails }: Po
       {/* Sleek Floating Timer Controls - Uniform 50px Button Size */}
       <div className="hero-timer-controls">
         {/* Reset Button */}
-        <button 
+        <motion.button 
           className="btn btn-secondary hero-btn-round" 
           onClick={timerType === 'pomodoro' ? handleReset : handleStopwatchReset} 
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.88 }}
           title="Reset timer without saving"
         >
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
           </svg>
-        </button>
+        </motion.button>
 
         {/* Primary Play / Pause Button - Matching 50px size */}
-        <button 
+        <motion.button 
           className="btn btn-primary hero-btn-play" 
           onClick={timerType === 'pomodoro' ? handleStartPause : handleStopwatchStartPause}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
           title={isRunning ? 'Pause (Space)' : 'Start (Space)'}
         >
           {isRunning ? (
@@ -717,12 +723,15 @@ export default function PomodoroTimer({ onSessionLogged, onScrollToDetails }: Po
               <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
             </svg>
           )}
-        </button>
+        </motion.button>
 
         {/* PROMINENT STOP & SAVE BUTTON - Saves automatically without modal */}
-        <button 
+        <motion.button 
           className={`btn hero-btn-stop-save ${hasElapsedStudyTime ? 'can-save' : ''}`}
           onClick={handleAutoStopAndRecord}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.92 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 15 }}
           title={hasElapsedStudyTime 
             ? `Stop clock now and automatically record ${elapsedMinutesDisplay > 0 ? `${elapsedMinutesDisplay}m` : `${elapsedSecondsRemainder}s`} to ${subject}` 
             : `Stop and save study session to ${subject}`
@@ -732,15 +741,21 @@ export default function PomodoroTimer({ onSessionLogged, onScrollToDetails }: Po
           <span className="stop-save-label">
             {hasElapsedStudyTime ? `Stop & Record (${elapsedMinutesDisplay > 0 ? `${elapsedMinutesDisplay}m` : `${elapsedSecondsRemainder}s`})` : 'Stop & Record'}
           </span>
-        </button>
+        </motion.button>
 
         {/* Skip Button (Pomodoro Mode Only) */}
         {timerType === 'pomodoro' && (
-          <button className="btn btn-secondary hero-btn-round" onClick={handleSkip} title="Skip to next mode">
+          <motion.button 
+            className="btn btn-secondary hero-btn-round" 
+            onClick={handleSkip} 
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.88 }}
+            title="Skip to next mode"
+          >
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
               <path d="M5.055 7.06C5.005 7.16 5 7.275 5 7.39v9.22c0 .115.005.23.055.33a.73.73 0 0 0 .396.397c.1.049.215.053.33.053h.273c.183 0 .365-.05.526-.145l6.91-4.11a.884.884 0 0 0 .375-.386c.05-.1.05-.246 0-.348a.884.884 0 0 0-.375-.386l-6.91-4.11a1.014 1.014 0 0 0-.8-.092.73.73 0 0 0-.396.397ZM19 6.25a.75.75 0 0 1 .75.75v10a.75.75 0 0 1-1.5 0V7a.75.75 0 0 1 .75-.75Z" />
             </svg>
-          </button>
+          </motion.button>
         )}
       </div>
 

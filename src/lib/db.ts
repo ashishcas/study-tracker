@@ -295,8 +295,8 @@ export interface DetailedAnalyticsSummary {
 /**
  * Calculate comprehensive analytics across all tracked study data using Dexie.
  */
-export function calculateAnalyticsSummary(filterDays: number = 30): DetailedAnalyticsSummary {
-  const allSessions = getSessions();
+export function calculateAnalyticsSummary(filterDays: number = 30, sessionsList?: StudySession[]): DetailedAnalyticsSummary {
+  const allSessions = sessionsList !== undefined ? sessionsList : getSessions();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - filterDays);
   const cutoffTime = cutoff.getTime();

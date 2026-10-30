@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { 
   getSessions, 
   deleteSession, 
@@ -18,13 +19,6 @@ interface StatsDashboardProps {
   onSessionDeleted: () => void;
 }
 
-interface ChartDayData {
-  dayName: string;
-  dateStr: string;
-  hours: number;
-  sessionsCount: number;
-}
-
 export default function StatsDashboard({
   filterDays,
   setFilterDays,
@@ -34,8 +28,6 @@ export default function StatsDashboard({
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [subjectsList, setSubjectsList] = useState<string[]>([]);
   const [newSubjectInput, setNewSubjectInput] = useState('');
-  const [hoveredBar, setHoveredBar] = useState<ChartDayData | null>(null);
-  const [barTooltipPos, setBarTooltipPos] = useState({ x: 0, y: 0 });
 
   // Load study logs and subjects
   useEffect(() => {
@@ -51,6 +43,11 @@ export default function StatsDashboard({
       window.removeEventListener('study-subjects-updated', handleSubjectsUpdate);
     };
   }, [refreshTrigger]);
+
+  // Safe memoized analytics summary using sessions state (prevents hydration mismatch)
+  const analyticsSummary = useMemo(() => {
+    return calculateAnalyticsSummary(filterDays, sessions);
+  }, [filterDays, sessions]);
 
   // Filter sessions by the selected range
   const filteredSessions = useMemo(() => {
@@ -143,50 +140,6 @@ export default function StatsDashboard({
     };
   }, [sessions, filteredSessions]);
 
-  // Calculate study hours for the last 7 days (Daily Study Hours Graph)
-  const weeklyChartData = useMemo<ChartDayData[]>(() => {
-    const focusSessions = sessions.filter(s => s.mode === 'focus');
-    
-    // Group sessions by ISO date string (YYYY-MM-DD)
-    const dayMap = new Map<string, { duration: number; count: number }>();
-    focusSessions.forEach(s => {
-      const compDate = new Date(s.completedAt);
-      const dateStr = compDate.toISOString().split('T')[0];
-      const current = dayMap.get(dateStr) || { duration: 0, count: 0 };
-      dayMap.set(dateStr, {
-        duration: current.duration + s.durationSeconds,
-        count: current.count + 1
-      });
-    });
-
-    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const result: ChartDayData[] = [];
-
-    // Generate last 7 days details (ending today)
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayName = d.getDay() === new Date().getDay() ? 'Today' : dayLabels[d.getDay()];
-      const stats = dayMap.get(dateStr) || { duration: 0, count: 0 };
-      
-      result.push({
-        dayName,
-        dateStr,
-        hours: parseFloat((stats.duration / 3600).toFixed(2)),
-        sessionsCount: stats.count
-      });
-    }
-
-    return result;
-  }, [sessions]);
-
-  // Find max hours in chart to compute relative SVG heights
-  const chartMaxHours = useMemo(() => {
-    const max = Math.max(...weeklyChartData.map(d => d.hours));
-    return max > 0 ? Math.ceil(max) : 3; // Ensure at least scale of 3 hours
-  }, [weeklyChartData]);
-
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this study session?')) {
       deleteSession(id);
@@ -223,20 +176,8 @@ export default function StatsDashboard({
     return 'All Time';
   };
 
-  const handleBarMouseEnter = (e: React.MouseEvent<SVGRectElement>, day: ChartDayData) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const containerRect = e.currentTarget.ownerSVGElement?.parentElement?.getBoundingClientRect();
-    if (containerRect) {
-      setBarTooltipPos({
-        x: rect.left - containerRect.left + rect.width / 2,
-        y: rect.top - containerRect.top - 8,
-      });
-      setHoveredBar(day);
-    }
-  };
-
   return (
-    <div className="stats-dashboard-wrapper">
+    <div className="stats-dashboard-wrapper" suppressHydrationWarning>
       {/* Top Filter Bar */}
       <div className="stats-filter-bar glass-card">
         <div className="filter-title-group">
@@ -269,7 +210,13 @@ export default function StatsDashboard({
 
       {/* Numerical Stats Cards - 4 Column Layout powered by Dexie */}
       <div className="stats-cards-grid four-cards">
-        <div className="stat-card glass-card">
+        <motion.div 
+          className="stat-card glass-card"
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+        >
           <div className="stat-icon">
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0 1 18 0Z" />
@@ -279,33 +226,51 @@ export default function StatsDashboard({
             <span className="stat-value">{stats.totalHours} hrs</span>
             <span className="stat-label">Studied ({getFilterLabel()})</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="stat-card glass-card">
+        <motion.div 
+          className="stat-card glass-card"
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+        >
           <div className="stat-icon">
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.14 2.14a1.5 1.5 0 0 0 2.12 0l3.74-3.74" />
             </svg>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{calculateAnalyticsSummary(filterDays).dailyAverageMinutes}m</span>
+            <span className="stat-value">{analyticsSummary.dailyAverageMinutes}m</span>
             <span className="stat-label">Daily Average Focus</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="stat-card glass-card">
+        <motion.div 
+          className="stat-card glass-card"
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+        >
           <div className="stat-icon">
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
             </svg>
           </div>
           <div className="stat-info">
-            <span className="stat-value text-sm">{calculateAnalyticsSummary(filterDays).peakStudyHour}</span>
+            <span className="stat-value text-sm">{analyticsSummary.peakStudyHour}</span>
             <span className="stat-label">Peak Focus Window</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="stat-card glass-card">
+        <motion.div 
+          className="stat-card glass-card"
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+        >
           <div className="stat-icon streak-icon">
             <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M12.969 2.138a.75.75 0 0 0-1.214-.53l-5.85 5.566a.75.75 0 0 0 .28 1.258h4.498v5.541A.75.75 0 0 0 11.897 15l5.85-5.566a.75.75 0 0 0-.28-1.258h-4.498V2.138ZM5.23 15.352a.75.75 0 0 1 .843.435 6.75 6.75 0 0 0 12.355-3.037.75.75 0 1 1 1.488.19A8.25 8.25 0 0 1 4.795 16.19a.75.75 0 0 1 .435-.838Z" clipRule="evenodd" />
@@ -315,114 +280,7 @@ export default function StatsDashboard({
             <span className="stat-value">{stats.currentStreak} days</span>
             <span className="stat-label">Current Streak 🔥</span>
           </div>
-        </div>
-      </div>
-
-      {/* NEW: SVG Daily Study Hours Graph (7-Day Overview) */}
-      <div className="chart-card glass-card">
-        <h3 className="chart-title">Study Hours (Last 7 Days)</h3>
-        <div className="chart-wrapper">
-          <svg viewBox="0 0 500 160" className="study-bar-chart">
-            <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-focus)" stopOpacity="1" />
-                <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0.45" />
-              </linearGradient>
-            </defs>
-
-            {/* Horizontal Grid lines */}
-            {Array.from({ length: 4 }).map((_, idx) => {
-              const val = Math.round((chartMaxHours / 3) * idx * 100) / 100;
-              const yPos = 130 - (idx * 30);
-              return (
-                <g key={idx}>
-                  <line x1="30" y1={yPos} x2="480" y2={yPos} stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
-                  <text x="22" y={yPos + 3} className="chart-text y-axis-label" textAnchor="end">{val}h</text>
-                </g>
-              );
-            })}
-
-            {/* Daily Bars */}
-            {weeklyChartData.map((day, idx) => {
-              const xPos = 45 + idx * 62;
-              const height = chartMaxHours > 0 ? (day.hours / chartMaxHours) * 90 : 0;
-              const yPos = 130 - height;
-              const isActive = day.dayName === 'Today';
-
-              return (
-                <g key={day.dateStr}>
-                  {/* Invisible broad hover detector */}
-                  <rect 
-                    x={xPos - 10} 
-                    y="10" 
-                    width="44" 
-                    height="130" 
-                    fill="transparent" 
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={(e) => handleBarMouseEnter(e, day)}
-                    onMouseLeave={() => setHoveredBar(null)}
-                  />
-                  {/* Glowing background for active bar */}
-                  {height > 0 && (
-                    <rect
-                      x={xPos}
-                      y={yPos}
-                      width="24"
-                      height={height}
-                      rx="4"
-                      fill={isActive ? 'var(--color-focus)' : 'transparent'}
-                      opacity="0.15"
-                      style={{ filter: 'blur(4px)' }}
-                    />
-                  )}
-                  {/* Main Gradient Bar */}
-                  <rect
-                    x={xPos}
-                    y={yPos}
-                    width="24"
-                    height={height > 0 ? height : 2} // Small sliver for 0 hours
-                    rx="4"
-                    fill={height > 0 ? 'url(#barGradient)' : 'rgba(255, 255, 255, 0.1)'}
-                    className={`chart-bar-rect ${isActive ? 'active-today' : ''}`}
-                    onMouseEnter={(e) => handleBarMouseEnter(e, day)}
-                    onMouseLeave={() => setHoveredBar(null)}
-                  />
-                  {/* X Axis label */}
-                  <text 
-                    x={xPos + 12} 
-                    y="148" 
-                    className={`chart-text x-axis-label ${isActive ? 'active-text font-bold' : ''}`} 
-                    textAnchor="middle"
-                  >
-                    {day.dayName}
-                  </text>
-                </g>
-              );
-            })}
-            <line x1="30" y1="130" x2="480" y2="130" stroke="rgba(255, 255, 255, 0.12)" />
-          </svg>
-
-          {/* Bar Chart Floating Tooltip */}
-          {hoveredBar && (
-            <div 
-              className="heatmap-tooltip"
-              style={{
-                left: `${barTooltipPos.x}px`,
-                top: `${barTooltipPos.y}px`,
-                transform: 'translate(-50%, -100%)',
-                minWidth: '130px'
-              }}
-            >
-              <div className="tooltip-date font-bold">{hoveredBar.dayName === 'Today' ? 'Today' : new Date(hoveredBar.dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-              <div className="tooltip-duration">
-                Studied: <span className="highlight">{hoveredBar.hours}h</span>
-              </div>
-              <div className="text-xs text-gray-400 mt-0.5">
-                {hoveredBar.sessionsCount} session{hoveredBar.sessionsCount !== 1 ? 's' : ''} completed
-              </div>
-            </div>
-          )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Secondary Row: Subjects & Recent Logs */}
@@ -439,9 +297,11 @@ export default function StatsDashboard({
                     <span className="subject-time">{formatHours(item.seconds)} ({item.percent}%)</span>
                   </div>
                   <div className="subject-progress-bg">
-                    <div 
+                    <motion.div 
                       className="subject-progress-bar" 
-                      style={{ width: `${item.percent}%` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${item.percent}%` }}
+                      transition={{ duration: 0.75, ease: 'easeOut' }}
                     />
                   </div>
                 </div>

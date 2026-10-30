@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
   StudyHabit, 
   getHabits, 
@@ -100,7 +101,7 @@ export default function HabitsTracker() {
   const completionPercent = totalSlots > 0 ? Math.round((completedSlots / totalSlots) * 100) : 0;
 
   return (
-    <div className="habits-tracker-card glass-card">
+    <div className="habits-tracker-card glass-card" suppressHydrationWarning>
       {/* Header */}
       <div className="habits-header">
         <div className="habits-title-group">
@@ -156,7 +157,12 @@ export default function HabitsTracker() {
         <div className="summary-stat">
           <span className="stat-label">Weekly Progress</span>
           <div className="progress-bar-wrap">
-            <div className="progress-bar-fill" style={{ width: `${completionPercent}%` }} />
+            <motion.div 
+              className="progress-bar-fill" 
+              initial={{ width: 0 }}
+              animate={{ width: `${completionPercent}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            />
           </div>
           <span className="stat-percent">{completionPercent}%</span>
         </div>
@@ -269,11 +275,15 @@ export default function HabitsTracker() {
                     {weekDays.map(d => {
                       const isChecked = !!habit.history[d.dateKey];
                       return (
-                        <div key={d.dateKey} className="day-checkbox-wrapper">
-                          <button
+                        <div key={d.dateKey} className={`day-checkbox-wrapper ${d.isToday ? 'is-today' : ''}`}>
+                          <span className="mobile-day-label">{d.dayName}</span>
+                          <motion.button
                             type="button"
                             className={`habit-check-btn ${isChecked ? 'checked' : ''} ${d.isToday ? 'today-highlight' : ''}`}
                             onClick={() => handleToggle(habit.id, d.dateKey)}
+                            whileTap={{ scale: 0.8 }}
+                            whileHover={{ scale: 1.12 }}
+                            transition={{ type: 'spring', stiffness: 450, damping: 17 }}
                             title={`${habit.title} on ${d.dayName} (${d.dateKey})`}
                           >
                             {isChecked ? (
@@ -283,7 +293,7 @@ export default function HabitsTracker() {
                             ) : (
                               <span className="empty-dot" />
                             )}
-                          </button>
+                          </motion.button>
                         </div>
                       );
                     })}

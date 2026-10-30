@@ -1,17 +1,21 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import PomodoroTimer from '../components/PomodoroTimer';
+import WeeklyStudyChart from '../components/WeeklyStudyChart';
 import TaskList from '../components/TaskList';
 import HabitsTracker from '../components/HabitsTracker';
-import StudyHeatmap from '../components/StudyHeatmap';
 import StatsDashboard from '../components/StatsDashboard';
+import StudyHeatmap from '../components/StudyHeatmap';
 import BackupPanel from '../components/BackupPanel';
 
 export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [filterDays, setFilterDays] = useState<number>(30); // Default to Last 30 Days (1 Month)
   const detailsRef = useRef<HTMLDivElement>(null);
+  const habitsRef = useRef<HTMLDivElement>(null);
+  const analyticsRef = useRef<HTMLDivElement>(null);
 
   const triggerRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -21,37 +25,69 @@ export default function Home() {
     detailsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const scrollToHabits = () => {
+    habitsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToAnalytics = () => {
+    analyticsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="study-app-wrapper">
       {/* Sleek Minimal Top Navigation Bar */}
-      <header className="sleek-top-navbar">
+      <motion.header 
+        className="sleek-top-navbar"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <div className="nav-left">
-          <div className="brand-icon">
+          <motion.div 
+            className="brand-icon"
+            whileHover={{ scale: 1.1, rotate: -8 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
             </svg>
-          </div>
+          </motion.div>
           <span className="brand-title">Studies<span className="brand-accent">Timer</span></span>
           <span className="nav-chip">Aesthetic Focus</span>
         </div>
 
         <nav className="nav-right">
-          <button 
+          <motion.button 
             type="button" 
             className="nav-link-btn" 
             onClick={scrollToDetails}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
           >
-            Tasks & Habits
-          </button>
-          <button 
+            <span className="nav-text-desktop">Study Overview</span>
+            <span className="nav-text-mobile">Overview</span>
+          </motion.button>
+          <motion.button 
             type="button" 
             className="nav-link-btn" 
-            onClick={scrollToDetails}
+            onClick={scrollToAnalytics}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
           >
             Analytics
-          </button>
+          </motion.button>
+          <motion.button 
+            type="button" 
+            className="nav-link-btn" 
+            onClick={scrollToHabits}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+          >
+            <span className="nav-text-desktop">Tasks & Habits</span>
+            <span className="nav-text-mobile">Habits</span>
+          </motion.button>
         </nav>
-      </header>
+      </motion.header>
 
       {/* Main Full-Height Hero Section: Almost Entire Screen */}
       <section className="hero-screen-section">
@@ -63,28 +99,68 @@ export default function Home() {
 
       {/* Secondary Dashboard Sections (Smoothly visible on scroll) */}
       <div id="study-details" ref={detailsRef} className="dashboard-content-container">
-        {/* Row 1: Study Tasks + Weekly Habits Tracker */}
-        <div className="productivity-suite-grid">
+        {/* 1. Study Hours / Time (Last 7 Days) Overview Diagram */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+          <WeeklyStudyChart refreshTrigger={refreshTrigger} />
+        </motion.div>
+
+        {/* 2. Analytics & Session History Dashboard */}
+        <motion.div 
+          ref={analyticsRef} 
+          className="analytics-section-wrapper"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+        >
+          <StatsDashboard 
+            filterDays={filterDays} 
+            setFilterDays={setFilterDays} 
+            refreshTrigger={refreshTrigger}
+            onSessionDeleted={triggerRefresh}
+          />
+        </motion.div>
+
+        {/* 3. Row: Study Tasks + Weekly Habits Tracker */}
+        <motion.div 
+          ref={habitsRef} 
+          className="productivity-suite-grid"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+        >
           {/* Integrated Study Tasks / To-Do List */}
           <TaskList />
 
           {/* Weekly Habits Tracker */}
           <HabitsTracker />
-        </div>
+        </motion.div>
 
-        {/* Row 2: Analytics & Session History Dashboard */}
-        <StatsDashboard 
-          filterDays={filterDays} 
-          setFilterDays={setFilterDays} 
-          refreshTrigger={refreshTrigger}
-          onSessionDeleted={triggerRefresh}
-        />
+        {/* 4. Visual Contribution Heatmap */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+        >
+          <StudyHeatmap filterDays={filterDays} refreshTrigger={refreshTrigger} />
+        </motion.div>
 
-        {/* Row 3: Visual Contribution Heatmap */}
-        <StudyHeatmap filterDays={filterDays} refreshTrigger={refreshTrigger} />
-
-        {/* Row 4: Backup & Data Management */}
-        <BackupPanel onBackupImported={triggerRefresh} />
+        {/* 5. Backup & Data Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.25, ease: 'easeOut' }}
+        >
+          <BackupPanel onBackupImported={triggerRefresh} />
+        </motion.div>
       </div>
     </div>
   );
