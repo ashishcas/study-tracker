@@ -1,0 +1,6 @@
+# Allow all search engine crawlers (Google, Bing, DuckDuckGo, etc.)
+User-agent: *
+Allow: /
+
+# Direct search engine crawlers to the sitemap
+Sitemap: https://prompt-forge.in/sitemap.xml
